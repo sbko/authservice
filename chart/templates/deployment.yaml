@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "authservice.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: authservice
   labels:
     {{- include "authservice.labels" . | nindent 4 }}
 spec:
@@ -19,6 +19,7 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
+        istio-injection: disabled
         {{- include "authservice.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
