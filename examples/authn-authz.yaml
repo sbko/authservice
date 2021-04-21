@@ -1,0 +1,38 @@
+# A RequestAuthentication policy says: if you have a JWT bearer token, it must match this format.
+# Note: _not_ having a token at all (or a non-bearer authorization header) is 
+# allowed. That's the role of AuthZ, not AuthN.
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: AuthN
+  # These policies must be installed each app's namespace
+  namespace: your-app
+spec:
+  jwtRules:
+    - issuer: https://login.dso.mil/auth/realms/baby-yoda
+      jwksUri: https://login.dso.mil/auth/realms/baby-yoda/protocol/openid-connect/certs
+      # Restrict the audience to ensure that an attacker cannot steal a token
+      # from one application and use it to authenticate against another app.
+      # The keycloak client name will be in the `aud` header of the JWT and is checked here:
+      audiences:
+      - il99_00000000-0000-0000-0000-000000000000_clientname
+      # Without forwardOriginalToken, Istio strips the Authorization header apps
+      # can't use it for their own auth decisions
+      forwardOriginalToken: true
+---
+# This simple policy simply says that all requests must have a JWT token. Combined
+# with the above AuthN policy, this ensures that all requests have a login.dso.mil
+# JWT issued for the correct client.
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: authz
+  namespace: your-app
+spec:
+  rules:
+    - from:
+        - source:
+            # You _could_ name a specific issuer, but AuthN already limits it to
+            # only login.dso.mil and a specific audience.
+            requestPrincipals: ["*"]
+            # Note this field is documented as "This field requires mTLS enabled."

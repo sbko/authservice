@@ -89,6 +89,20 @@ chains:
     certificate_authrority: "-----BEGIN CERTIFICATE-----\nMIIE4jCCAsqgAwIBAgIBATANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDEwZzZm8t\nY2EwHhcNMTkxMjIwMDAxNjI1WhcNMjEwNjIwMDAxNjIxWjARMQ8wDQYDVQQDEwZz\n...\nwPAYZhormzV5LxXMSd3BMdyexNvNiGffULhnYEebFI9GouFxV1LPdVu058LRW/db\n6PDm7+GEq/CcQhTgYOELmmcnC89zNxcCXiahxqKIMTuid295N4NldyK/IT4Tn4GN\nVknTT/Hr\n-----END CERTIFICATE-----"
 ```
 
+## AuthN and AuthZ
+
+In addition to an Authservice filter, all applications _must_ have an AuthN `RequestAuthentication` resource in their namespace for Authservice to run (and to validate the JWT). Additionally apps must have an AuthZ `RequestAuthentication` policy to ensure all requests have a JWT.
+
+See [`authn-auth.yaml`](examples/authn-authz.yaml) for an example configuration to be installed in each app's namespace.
+
+The full authentication flow is:  
+Token acquisition (Authservice) → AuthN [`RequestAuthentication`](https://istio.io/latest/docs/reference/config/security/request_authentication/) → AuthZ [`AuthorizationPolicy`](https://istio.io/latest/docs/reference/config/security/authorization-policy/) → app
+
+* The EnvoyFilter is configured as INSERT_BEFORE `envoy.filters.http.jwt_authn`. Without an `RequestAuthentication` resource, your sidecars won't have `jwt_authn` filter and **Authservice won't be installed in the filter chain either**.
+* Authservice **can be bypassed** if requests have a preexisting Authorization header. Its _only_ role is acquiring JWT tokens. (However [a bug in Authservice](https://github.com/istio-ecosystem/authservice/issues/141) forces some requests through Authservice unnecessarily.)
+* `RequestAuthentication` **can be bypassed** if requests have no Authorization header or a non-bearer Authorization header. Its _only_ role is validating the issuer/audience/etc of JWTs. It will block requests with an expired JWT or with the wrong issuer, etc.
+* `AuthorizationPolicy` actually enforces policy on requests. It is used to ensure that all requests have a JWT (and any other specified policy on the token).
+* Using an `AuthorizationPolicy` ensures a fail-closed configuration. If Authservice filters are misconfigured, AuthZ will block the request with a 403 `RBAC: access denied`.
 
 [affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 [imagePullPolicy]: https://kubernetes.io/docs/concepts/containers/images/#updating-images
