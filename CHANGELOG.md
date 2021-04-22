@@ -1,6 +1,10 @@
 # Changelog
 
 
+## 0.1.7-bb.0
+### Added
+- Fixing skipping templating out Keycloak formatted URL when certain URIs are explicitly specified for an authservice chain.
+
 ## 0.1.6-bb.3
 ### Changed
 - Pointing image to registry1 image from IronBank.
