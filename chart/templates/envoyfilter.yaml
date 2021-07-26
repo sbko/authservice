@@ -89,7 +89,7 @@ spec:
                 name: "envoy.filters.http.router"
       patch:
         operation: ADD
-	filterClass: AUTHZ
+        filterClass: AUTHZ
         value:
           name: envoy.filters.http.ext_authz
           typed_config:
