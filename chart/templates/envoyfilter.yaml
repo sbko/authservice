@@ -88,11 +88,12 @@ spec:
               subFilter:
                 name: "envoy.filters.http.router"
       patch:
-        operation: INSERT_BEFORE
+        operation: ADD
+	filterClass: AUTHZ
         value:
           name: envoy.filters.http.ext_authz
           typed_config:
-            "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz"
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
             stat_prefix: ext_authz
             grpc_service:
               timeout: 30s
