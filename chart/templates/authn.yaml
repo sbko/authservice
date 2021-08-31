@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-authn
+  namespace: istio-system
+spec:
+  selector:
+    matchLabels:
+      protect: keycloak
+  jwtRules:
+    - issuer: https://{{ .Values.global.oidc.host }}/auth/realms/{{ .Values.global.oidc.realm }}
+      jwksUri: https://{{ .Values.global.oidc.host }}/auth/realms/{{ .Values.global.oidc.realm }}/protocol/openid-connect/certs
+      forwardOriginalToken: true
+
